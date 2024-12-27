@@ -11,21 +11,21 @@ function SinceCards() {
       <h2 className="since_h2">TRUST SINCE 2018</h2>
       <div className="since_content">
         <figure className="since_mousePic">
-          <img src={mouse1} alt="" className="since_mouse" />
+          <img loading={"lazy"} src={mouse1} alt="" className="since_mouse" />
           <div className="since__mouse_txt">
             <h5 className="since__mouse_h5">{t("CardOneMain")}</h5>
             <p className="since__mouse_p">{t("CardOneTxt")}</p>
           </div>
         </figure>
         <figure className="since_mousePic">
-          <img src={mouse2} alt="" className="since_mouse" />
+          <img loading={"lazy"} src={mouse2} alt="" className="since_mouse" />
           <div className="since__mouse_txt">
             <h5 className="since__mouse_h5">{t("CardTwoMain")}</h5>
             <p className="since__mouse_p">{t("CardTwoTxt")}</p>
           </div>
         </figure>
         <figure className="since_mousePic">
-          <img src={mouse3} alt="" className="since_mouse" />
+          <img loading={"lazy"} src={mouse3} alt="" className="since_mouse" />
           <div className="since__mouse_txt">
             <h5 className="since__mouse_h5">{t("CardThreeMain")}</h5>
             <p className="since__mouse_p">{t("CardThreeTxt")}</p>

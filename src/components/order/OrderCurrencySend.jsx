@@ -1,4 +1,4 @@
-import React from "react";
+import React, {memo} from "react";
 import useRound from "../../hooks/useRound";
 
 function OrderCurrencySend({ fromName, value, img }) {
@@ -22,4 +22,4 @@ function OrderCurrencySend({ fromName, value, img }) {
   );
 }
 
-export default OrderCurrencySend;
+export default memo(OrderCurrencySend);

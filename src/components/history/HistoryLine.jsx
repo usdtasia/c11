@@ -1,9 +1,12 @@
-import React from "react";
+import React, {useMemo, memo} from "react";
+import {smartRound} from "../../utils/smartRound";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
 
 function HistoryLine({ createdAt, from, rate, to, status, darker, transactionId }) {
+
   const formattedDate = format(new Date(createdAt), "dd.MM.yyyy HH:mm");
+
   const statusMap = {
     0: "created",
     1: "pending",
@@ -11,9 +14,14 @@ function HistoryLine({ createdAt, from, rate, to, status, darker, transactionId 
     3: "success",
     4: "paid",
   };
+
+  const rateValue = useMemo(() => {
+    return smartRound(rate);
+  },[rate]);
+
   return (
       <Link
-          to={`/zayavka/${transactionId}`}
+          to={`/order/${transactionId}`}
           className={`table__content_line ${darker}`}
       >
         <p className="table__content_line_el table__content_line_el_date">
@@ -30,7 +38,7 @@ function HistoryLine({ createdAt, from, rate, to, status, darker, transactionId 
           {to.value.toFixed(2)}
         </p>
         <p className="table__content_line_el table__content_line_el_value">
-          {rate}
+          {rateValue}
         </p>
         <p
             className={`table__content_line_el  history__green_font ${statusMap[status]}`}
@@ -41,4 +49,4 @@ function HistoryLine({ createdAt, from, rate, to, status, darker, transactionId 
   );
 }
 
-export default HistoryLine;
+export default memo(HistoryLine);

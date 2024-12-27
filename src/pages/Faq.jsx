@@ -1,12 +1,8 @@
 import React from "react";
-import FaqComponent from "../components/FaqComponent";
+import FaqComponent from "../components/faq/FaqComponent";
 
 function Faq() {
-  return (
-    <>
-      <FaqComponent />
-    </>
-  );
+  return <FaqComponent />;
 }
 
 export default Faq;

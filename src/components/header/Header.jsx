@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {useState, useEffect, useRef, useCallback} from "react";
+import $api from "../../api";
 import GB from "../../assets/img/flags/GB.svg";
 import arrow_down from "../../assets/img/arrow_down.svg";
 import menuHamburger from "../../assets/img/menuHamburger.svg";
@@ -10,9 +11,9 @@ import TruncateText from "./TruncateText";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { jwtDecode } from "jwt-decode";
+import { STATUS_CODES } from "../../assets/variables";
 
-import axios from "axios";
-
+import axiosInstance from "../../api/axiosInstance";
 import { useDispatch } from "react-redux";
 import { addLogin, removeLogin, setCurrencyImages } from "../../redux/actions";
 import LangDrop from "./LangDrop";
@@ -20,16 +21,28 @@ import { useTranslation } from "react-i18next";
 import { languages } from "../../assets/languages";
 
 function Header() {
+
+  const dispatch = useDispatch();
   const { t } = useTranslation();
+
   const [login, setLogin] = useState(false);
   const [registr, setRegistr] = useState(false);
   const [burger, setBurger] = useState(false);
   const [dropdown, setDropdown] = useState(false);
+  const [langDrop, setLangDrop] = useState(false);
 
   const loginRef = useRef(null);
   const logoutRef = useRef(null);
   const registrRef = useRef(null);
   const burgerContentRef = useRef(null);
+
+  const loginTxt = useSelector((state) => state.loginReducer.login);
+
+  const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
+  const savedFlag = Object.values(languages).find(
+      (lang) => lang.code === savedLanguage
+  )?.flag;
+  const currencies = useSelector((state) => state.exchangeReducer.currencies);
 
   const handleLoginClick = () => {
     setLogin(true);
@@ -59,72 +72,74 @@ function Header() {
     setRegistr(false);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
+  const handleClickOutside = (event) => {
+    if (
         dropdown &&
         logoutRef.current &&
         !logoutRef.current.contains(event.target)
-      ) {
-        handleCloseModals();
-      }
-      if (
+    ) {
+      handleCloseModals();
+    }
+    if (
         login &&
         loginRef.current &&
         !loginRef.current.contains(event.target)
-      ) {
-        handleCloseModals();
-      }
-      if (
+    ) {
+      handleCloseModals();
+    }
+    if (
         registr &&
         registrRef.current &&
         !registrRef.current.contains(event.target)
-      ) {
-        handleCloseModals();
-      }
-      if (
+    ) {
+      handleCloseModals();
+    }
+    if (
         burger &&
         burgerContentRef.current &&
         !burgerContentRef.current.contains(event.target)
-      ) {
-        handleCloseModals();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdown, login, registr, burger]);
-
-  const loginTxt = useSelector((state) => state.loginReducer.login);
-
-  // логіка для сесії логіну (при оновлені ст, щоб логін вже був виконан)
-
-  const dispatch = useDispatch();
-
-  const token =
-    localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
-  useEffect(() => {
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      const userId = decodedToken.id;
-
-      axios
-        .get(`${process.env.REACT_APP_SERVER_URL}/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          if (response.status === 200) {
-            const userData = response.data;
-            dispatch(addLogin(userData.login));
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch user data:", error);
-        });
+    ) {
+      handleCloseModals();
     }
-  }, [dispatch]);
+  };
+
+  const getUser = useCallback(async () => {
+    const token =
+        localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+    if (!token) return;
+    const decodedToken = jwtDecode(token);
+    const userId = decodedToken.id;
+    let response = await $api.get(`${process.env.REACT_APP_SERVER_URL}/user/${userId}`);
+    if (!response) return;
+    if (response.status === STATUS_CODES.SUCCESS) {
+      const userData = response.data;
+      dispatch(addLogin(userData.login));
+    }
+  },[dispatch]);
+
+  const fetchCurrencyImages = useCallback(async () => {
+    const imageUrls = {};
+
+    for (const currency of currencies) {
+      if (currency.icon) {
+        try {
+          const response = await axiosInstance.get(
+              `${process.env.REACT_APP_SERVER_URL}/file/`,
+              {
+                params: { Url: currency.icon },
+                responseType: "blob",
+              }
+          );
+          const imageUrl = URL.createObjectURL(response.data);
+          imageUrls[currency.value] = imageUrl;
+        } catch (error) {
+          console.error(`Error fetching image for ${currency.value}:`, error);
+        }
+      }
+    }
+
+    dispatch(setCurrencyImages(imageUrls));
+  },[currencies, dispatch]);
 
   const logout = () => {
     localStorage.removeItem("authToken");
@@ -140,23 +155,22 @@ function Header() {
   const handleLogin = async (login, password) => {
     const loginData = { login, password };
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${process.env.REACT_APP_SERVER_URL}/user/auth/login`,
         loginData
       );
 
-      if (response.status === 200) {
+      if (response.status === STATUS_CODES.SUCCESS) {
         const token = response.data;
         localStorage.setItem("authToken", token);
 
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const userResponse = await axios.get(
-          `${process.env.REACT_APP_SERVER_URL}/user/${userId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const userResponse = await $api.get(
+          `${process.env.REACT_APP_SERVER_URL}/user/${userId}`
         );
-        if (userResponse.status === 200) {
+        if (userResponse.status === STATUS_CODES.SUCCESS) {
           dispatch(addLogin(userResponse.data.login));
         }
       }
@@ -165,49 +179,24 @@ function Header() {
     }
   };
 
-  const [langDrop, setLangDrop] = useState(false);
-
   const showDropLang = () => {
     setLangDrop(!langDrop);
   };
 
-  const savedLanguage = localStorage.getItem("selectedLanguage") || "en";
-
-  const savedFlag = Object.values(languages).find(
-    (lang) => lang.code === savedLanguage
-  )?.flag;
-
-  //currImgsAdd
-
-  const currencies = useSelector((state) => state.exchangeReducer.currencies);
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdown, login, registr, burger]);
 
   useEffect(() => {
-    const fetchCurrencyImages = async () => {
-      const imageUrls = {};
-
-      for (const currency of currencies) {
-        if (currency.icon) {
-          try {
-            const response = await axios.get(
-              `${process.env.REACT_APP_SERVER_URL}/file/`,
-              {
-                params: { Url: currency.icon },
-                responseType: "blob",
-              }
-            );
-            const imageUrl = URL.createObjectURL(response.data);
-            imageUrls[currency.value] = imageUrl;
-          } catch (error) {
-            console.error(`Error fetching image for ${currency.value}:`, error);
-          }
-        }
-      }
-
-      dispatch(setCurrencyImages(imageUrls));
-    };
-
     fetchCurrencyImages();
-  }, [currencies]);
+  }, [fetchCurrencyImages]);
+
+  useEffect(() => {
+    getUser();
+  }, [getUser]);
 
   return (
     <header>
@@ -243,7 +232,7 @@ function Header() {
           <Link to="/" className="groupNav_el">
             {t("Home")}
           </Link>
-          {token ? (
+          {loginTxt ? (
             <Link to="/history" className="groupNav_el">
               {t("History")}
             </Link>

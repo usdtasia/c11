@@ -19,14 +19,24 @@ import {
 import { networkArr } from "../../assets/networkArr";
 
 function Wallet({ isEmailValid }) {
-  const currencies = useSelector((state) => state.exchangeReducer.currencies);
+
   const dispatch = useDispatch();
 
   const [isFiat, setIsFiat] = useState(false);
 
+  const email = useSelector((state) => state.contactsReducer.email);
+  const name = useSelector((state) => state.contactsReducer.name);
+  const telega = useSelector((state) => state.contactsReducer.telega);
+  const wallet = useSelector((state) => state.contactsReducer.wallet);
+  const highlight = useSelector((state) => state.highlightReducer.highlight);
+  const currencies = useSelector((state) => state.exchangeReducer.currencies);
   const getName = useSelector(
     (state) => state.currCryptoCurrChooseReducer.getCurrency
   );
+
+  const hasValue =
+      wallet.length > 0 && (!isFiat || (isFiat && wallet.length === 16));
+  const addressName = networkArr[getName];
 
   const handleEmailChange = (e) => {
     dispatch(setEmail(e.target.value));
@@ -43,13 +53,6 @@ function Wallet({ isEmailValid }) {
     dispatch(setWallet(e.target.value));
   };
 
-  const email = useSelector((state) => state.contactsReducer.email);
-  const name = useSelector((state) => state.contactsReducer.name);
-  const telega = useSelector((state) => state.contactsReducer.telega);
-  const wallet = useSelector((state) => state.contactsReducer.wallet);
-
-  const highlight = useSelector((state) => state.highlightReducer.highlight);
-
   useEffect(() => {
     if (highlight) {
       setTimeout(() => {
@@ -58,17 +61,12 @@ function Wallet({ isEmailValid }) {
     }
   }, [dispatch, highlight]);
 
-  const addressName = networkArr[getName];
-
   useEffect(() => {
     const selectedCurrency = currencies.find(
       (currency) => currency.value === getName
     );
     setIsFiat(selectedCurrency ? selectedCurrency.type === 1 : false);
   }, [currencies, getName]);
-
-  const hasValue =
-    wallet.length > 0 && (!isFiat || (isFiat && wallet.length === 16));
 
   return (
     <>

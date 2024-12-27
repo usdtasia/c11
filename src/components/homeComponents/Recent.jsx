@@ -4,36 +4,34 @@ import arrowUpDown from "../../assets/img/arrowUpDown.svg";
 import infoSuccess from "../../assets/img/infoSuccess.svg";
 import tether_usdtlogo_small from "../../assets/img/tether_usdtlogo_small.svg";
 import RecentLine from "./RecentLine";
-import axios from "axios";
 import { fiatImageMap } from "../../assets/fiatImageMap";
 import { useSelector } from "react-redux";
+import axiosInstance from "../../api/axiosInstance";
 
 import { currencyImageMap } from "../../assets/currencyImageMap";
 
 function Recent() {
-  const currencyImages = useSelector(
-    (state) => state.currencyImageReducer.currencyImages
-  );
-  const imgArrays = { ...fiatImageMap, ...currencyImageMap, ...currencyImages };
 
   const [transactions, setTransactions] = useState([]);
-  useEffect(() => {
-    async function fetchTransactions() {
-      try {
-        const response = await axios.get(
+
+  const currencyImages = useSelector(
+      (state) => state.currencyImageReducer.currencyImages
+  );
+
+  const imgArrays = { ...fiatImageMap, ...currencyImageMap, ...currencyImages };
+
+  async function fetchTransactions() {
+    try {
+      const response = await axiosInstance.get(
           `${process.env.REACT_APP_SERVER_URL}/transaction`
-        );
-
-        const sortedTransactions = response.data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-
-        setTransactions(sortedTransactions.slice(0, 6));
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-      }
+      );
+      setTransactions(response.data.slice(0, 6));
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
     }
+  }
 
+  useEffect(() => {
     fetchTransactions();
   }, []);
 

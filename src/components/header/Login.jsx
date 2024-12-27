@@ -4,8 +4,10 @@ import hrestik from "../../assets/img/hrestik.svg";
 import login_profile from "../../assets/img/login_profile.svg";
 import login_lock from "../../assets/img/login_lock.svg";
 import { jwtDecode } from "jwt-decode";
+import {STATUS_CODES} from "../../assets/variables";
 
-import axios from "axios";
+import $api from "../../api";
+import axiosInstance from "../../api/axiosInstance";
 import { useTranslation } from "react-i18next";
 
 import { useDispatch } from "react-redux";
@@ -13,27 +15,29 @@ import { addLogin } from "../../redux/actions";
 import {logEvent} from "../../assets/analytics";
 
 function Login({ loginRef, close, handleRegistrClick }) {
+
   const dispatch = useDispatch();
+  const { t } = useTranslation();
+
   const [checked, setChecked] = useState(false);
+  const [login, setLogin] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
 
   const handleCheckboxChange = () => {
     setChecked(!checked);
   };
 
-  const [login, setLogin] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const loginData = { login, password };
     try {
-      const response = await axios.post(
+      const response = await axiosInstance.post(
         `${process.env.REACT_APP_SERVER_URL}/user/auth/login`,
         loginData
       );
 
-      if (response.status === 200) {
+      if (response.status === STATUS_CODES.SUCCESS) {
         const token = response.data;
 
         if (checked) {
@@ -53,14 +57,14 @@ function Login({ loginRef, close, handleRegistrClick }) {
         const decodedToken = jwtDecode(token);
         const userId = decodedToken.id;
 
-        const userResponse = await axios.get(
+        const userResponse = await axiosInstance.get(
           `${process.env.REACT_APP_SERVER_URL}/user/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         const userData = userResponse.data;
-        if (userResponse.status === 200) {
+        if (userResponse.status === STATUS_CODES.SUCCESS) {
           console.log("User data:", userData);
         }
         dispatch(addLogin(userData.login));
@@ -80,12 +84,9 @@ function Login({ loginRef, close, handleRegistrClick }) {
       const decodedToken = jwtDecode(token);
       const userId = decodedToken.id;
 
-      axios
-        .get(`${process.env.REACT_APP_SERVER_URL}/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      $api.get(`${process.env.REACT_APP_SERVER_URL}/user/${userId}`)
         .then((response) => {
-          if (response.status === 200) {
+          if (response.status === STATUS_CODES.SUCCESS) {
             const userData = response.data;
             dispatch(addLogin(userData.login));
           }
@@ -95,7 +96,7 @@ function Login({ loginRef, close, handleRegistrClick }) {
         });
     }
   }, [dispatch]);
-  const { t } = useTranslation();
+
   return (
     <div className="login_container">
       <form onSubmit={handleSubmit} className="login_content" ref={loginRef}>

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import HistoryLine from "../components/history/HistoryLine";
-
 import arrRight from "../assets/img/arrRight.svg";
-
 import { useSelector } from "react-redux";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import $api from "../api";
 import TableStaticLine from "../components/history/TableStaticLine";
 
 function History() {
@@ -14,38 +12,43 @@ function History() {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const loginTxt = useSelector((state) => state.loginReducer.login);
-
   const token =
     localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
 
-  useEffect(() => {
-    const fetchData = async (page) => {
-      if (token) {
-        const decodedToken = jwtDecode(token);
-        const id = decodedToken.id;
+  const fetchData = async (page) => {
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      const id = decodedToken.id;
 
-        try {
-          const response = await axios.get(
-            `${process.env.REACT_APP_SERVER_URL}/user/${id}/transactions?Page=${page}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setTransactions(response.data.transactions);
-          setTotalPages(response.data.pages);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        return setLoading(true);
+      try {
+        const response = await $api.get(`${process.env.REACT_APP_SERVER_URL}/user/${id}/transactions?Page=${page}`);
+        setTransactions(response.data.transactions);
+        setTotalPages(response.data.pages);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
-    };
+    } else {
+      return setLoading(true);
+    }
+  };
 
+  const handleNextPage = () => {
+      if (currentPage < totalPages) {
+          setCurrentPage(currentPage + 1);
+      }
+  };
+
+  const handlePrevPage = () => {
+      if (currentPage > 1) {
+          setCurrentPage(currentPage - 1);
+      }
+  };
+
+  useEffect(() => {
     fetchData(currentPage);
-  }, [token, loginTxt, currentPage]);
+  }, [token, currentPage]);
 
   if (loading)
     return (
@@ -57,21 +60,10 @@ function History() {
       </main>
     );
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
   return (
     <main className="homeMain home_container container other_container">
-      <div className="zayavka__h1_container">
-        <h1 className="zayavka_h1">ORDER HISTORY</h1>
+      <div className="order__h1_container">
+        <h1>ORDER HISTORY</h1>
       </div>
       <div className="exchange_container order_exchange">
         <section className="quick__exchange_container quick__exchange_container_order">
@@ -91,7 +83,7 @@ function History() {
                 />
               );
             })}
-            {transactions.length === 0 && (
+            {!transactions.length && (
               <div className="table_zeroTransactions">
                 <p className="table_zeroTransactions_p">
                   You have not created any transactions yet.

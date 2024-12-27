@@ -18,8 +18,8 @@ function decorations() {
       </div>
       <Routes>
         <Route path="/" element={<BckHome />} />
-        <Route path="/zayavka" element={<Bck />} />
-        <Route path="/zayavka2" element={<Bck />} />
+        <Route path="/order" element={<Bck />} />
+        <Route path="/order-pay" element={<Bck />} />
         <Route path="/history" element={<Bck />} />
       </Routes>
     </div>

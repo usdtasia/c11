@@ -1,4 +1,4 @@
-import React from "react";
+import React, {memo} from "react";
 import order_contact from "../../assets/img/order_contact.svg";
 import order_email from "../../assets/img/order_email.svg";
 import order_telegram from "../../assets/img/order_telegram.svg";
@@ -36,4 +36,4 @@ function PersonalInfo({ name, email, telega, wallet }) {
   );
 }
 
-export default PersonalInfo;
+export default memo(PersonalInfo);

@@ -1,15 +1,19 @@
-import React from "react";
+import React, {useMemo} from "react";
 import CountryToCurrBlock from "./CountryToCurrBlock";
 import { fiatImageMap } from "../../assets/fiatImageMap";
 import { flags } from "../../assets/flags.js";
 import { useSelector } from "react-redux";
 
 function CountryToUsdt() {
+
   const currencyImages = useSelector(
     (state) => state.currencyImageReducer.currencyImages
   );
   const currencies = useSelector((state) => state.exchangeReducer.currencies);
-  const fiat = currencies.filter((currency) => currency.type === 1);
+
+  const fiat = useMemo(() => {
+    return currencies.filter((currency) => currency.type === 1);
+  },[currencies]);
 
   return (
     <section className="countryToUsdt">

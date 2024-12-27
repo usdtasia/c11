@@ -1,62 +1,69 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState, useMemo, useCallback} from "react";
 import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import $api from "../api";
 import { useTranslation } from "react-i18next";
 
-import PersonalInfo from "../components/zayavka/PersonalInfo";
-import QuickExchangeTime from "../components/zayavka/QuickExchangeTime";
-import OrderCurrencySend from "../components/zayavka/OrderCurrencySend";
-import OrderCurrencyGet from "../components/zayavka/OrderCurrencyGet";
-import OrderCurrencyMobile from "../components/zayavka/OrderCurrencyMobile";
+import PersonalInfo from "../components/order/PersonalInfo";
+import QuickExchangeTime from "../components/order/QuickExchangeTime";
+import OrderCurrencySend from "../components/order/OrderCurrencySend";
+import OrderCurrencyGet from "../components/order/OrderCurrencyGet";
+import OrderCurrencyMobile from "../components/order/OrderCurrencyMobile";
 
 import { format } from "date-fns";
 
 import { fiatImageMap } from "../assets/fiatImageMap";
 import { currencyImageMap } from "../assets/currencyImageMap";
+import {getTransactionStatus, getTransactionStatusesMap} from "../assets/helpers";
 
-function Zayavka() {
+function Order() {
+
   const { t } = useTranslation();
   const currencyImages = useSelector(
     (state) => state.currencyImageReducer.currencyImages
   );
-  const imgArrays = { ...fiatImageMap, ...currencyImageMap, ...currencyImages };
   const { transactionId } = useParams();
-  const [visibleBtn, setVisibleBtn] = useState(true);
+
   const [transactionData, setTransactionData] = useState(null);
   const [error, setError] = useState(true);
 
-  const loginTxt = useSelector((state) => state.loginReducer.login);
-  const token =
-    localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+  const imgArrays = { ...fiatImageMap, ...currencyImageMap, ...currencyImages };
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const status = useMemo(() => {
+    if (!transactionData) return "";
+    return getTransactionStatus(transactionData.status);
+  },[transactionData]);
+
+  const statusMap = useMemo(() => {
+    return getTransactionStatusesMap(t);
+  },[t]);
+
+  const rate = useMemo(() => {
+    if (!transactionData) return 0;
+    if (transactionData?.from?.value && transactionData?.to?.value) {
+      return transactionData.to.value / transactionData.from.value;
+    }
+    return 0;
+  },[transactionData]);
+
+  const isVisibleButton = useMemo(() => {
+    return transactionData && transactionData?.status === 0;
+  },[transactionData]);
+
+  const fetchData = useCallback(async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const response = await $api.get(`${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}`);
         setError(false);
         setTransactionData(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError(true);
       }
-    };
-
-    fetchData();
-  }, [transactionId, token, loginTxt]);
+  },[transactionId])
 
   useEffect(() => {
-    if (transactionData && transactionData.status === 0) {
-      setVisibleBtn(true);
-    } else {
-      setVisibleBtn(false);
-    }
-  }, [transactionData]);
+    fetchData();
+  }, [fetchData]);
 
   if (!transactionData)
     return (
@@ -82,27 +89,11 @@ function Zayavka() {
     new Date(transactionData.createdAt),
     "dd.MM.yyyy HH:mm"
   );
-  const statusMap = {
-    0: t("Created"),
-    1: t("Pending"),
-    2: t("Cancelled"),
-    3: t("Success"),
-    4: t("Paid"),
-  };
-
-  const getRate = () => {
-    if (transactionData?.from?.value && transactionData?.to?.value) {
-      return transactionData.to.value / transactionData.from.value;
-    }
-    return 0;
-  };
-
-  const rate = getRate();
 
   return (
     <main className="homeMain home_container container other_container">
-      <div className="zayavka__h1_container">
-        <h1 className="zayavka_h1">
+      <div className="order__h1_container">
+        <h1>
           {t("Order")} #{transactionData.id}
         </h1>
       </div>
@@ -150,17 +141,7 @@ function Zayavka() {
             <span className="order__status_p">
               {t("Order_statusShort")}{" "}
               <span
-                className={`statusTransaction_zayavka ${
-                  transactionData.status === 0
-                    ? "created"
-                    : transactionData.status === 1
-                    ? "pending"
-                    : transactionData.status === 2
-                    ? "cancelled"
-                    : transactionData.status === 3
-                    ? "success"
-                    : "paid"
-                }`}
+                className={`statusTransaction_zayavka ${status}`}
               >
                 {statusMap[transactionData.status]}
               </span>
@@ -169,23 +150,12 @@ function Zayavka() {
               {t("Order_statusLong")} {transactionData.id}
             </p>
             <p
-              className={`statusTransaction_zayavka      order__status_p_mob mob_oplachena 
-${
-  transactionData.status === 0
-    ? "created"
-    : transactionData.status === 1
-    ? "pending"
-    : transactionData.status === 2
-    ? "cancelled"
-    : transactionData.status === 3
-    ? "success"
-    : "paid"
-}`}
+              className={`statusTransaction_zayavka order__status_p_mob mob_oplachena ${status}`}
             >
               {statusMap[transactionData.status]}
             </p>
           </section>
-          {visibleBtn && (
+          {isVisibleButton && (
             <section className="order_instruction">
               <h3 className="order__instruction_h3">{t("WhatShouldBeDone")}</h3>
               <div className="order__instruction_punkty">
@@ -208,8 +178,8 @@ ${
               </div>
             </section>
           )}
-          {visibleBtn && (
-            <Link to={`/zayavka2/${transactionId}`} className="exchange_btn">
+          {isVisibleButton && (
+            <Link to={`/order-pay/${transactionId}`} className="exchange_btn">
               <button className="quick__exchange_btn order_btn">
                 {t("Order_pay")}
               </button>
@@ -221,4 +191,4 @@ ${
   );
 }
 
-export default Zayavka;
+export default Order;

@@ -1,4 +1,5 @@
 import React from "react";
+import {getCurrentYear} from "../../utils/dates";
 import { Routes, Route } from "react-router-dom";
 import telega from "../../assets/img/telega.svg";
 import insta from "../../assets/img/insta.svg";
@@ -11,7 +12,11 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 function Footer() {
+
   const { t } = useTranslation();
+
+  const currentYear = getCurrentYear();
+
   return (
     <footer>
       <Routes>
@@ -103,7 +108,7 @@ function Footer() {
           </section>
         </div>
         <div className="footer_span">
-          © 2018–2024  USDTASIA . All rights reresved.
+          © 2018–{currentYear}  USDTASIA . All rights reresved.
         </div>
       </section>
     </footer>

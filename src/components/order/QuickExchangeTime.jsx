@@ -1,4 +1,4 @@
-import React from "react";
+import React, {memo} from "react";
 import time_line from "../../assets/img/time_line.svg";
 import time_graph from "../../assets/img/time_graph.svg";
 import calendar from "../../assets/img/calendar.svg";
@@ -29,4 +29,4 @@ function QuickExchangeTime({ formattedDate, toName, fromName, rate }) {
   );
 }
 
-export default QuickExchangeTime;
+export default memo(QuickExchangeTime);

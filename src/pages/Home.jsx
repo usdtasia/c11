@@ -1,5 +1,4 @@
 import React from "react";
-
 import ExchangeContainer from "../components/homeComponents/ExchangeContainer";
 import Rates from "../components/homeComponents/Rates";
 import CountryToUsdt from "../components/homeComponents/CountryToUsdt";

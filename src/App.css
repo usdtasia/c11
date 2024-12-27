@@ -1544,7 +1544,7 @@ footer {
     width: auto;
     justify-content: start;
     border-right: 1px solid #15255a;
-    padding-right: 4px;
+    padding-right: 8px;
   }
 }
 @media (max-width: 1200px) {
@@ -1827,7 +1827,7 @@ footer {
   margin-bottom: 180px;
 }
 
-.zayavka__h1_container {
+.order__h1_container {
   width: 100%;
   display: flex;
   align-items: center;
@@ -1932,7 +1932,17 @@ footer {
   display: flex;
   justify-content: space-between;
   margin: 0 auto;
-  width: 80%;
+  width: 100%;
+}
+
+.fallback {
+  background: #4B5EB6;
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
 }
 
 .order__persInfo_el {
@@ -2055,7 +2065,7 @@ footer {
 }
 
 @media (max-width: 1000px) {
-  .zayavka__h1_container {
+  .order__h1_container {
     font-family: Roboto;
     font-size: 32px;
     font-weight: 700;

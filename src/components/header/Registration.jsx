@@ -4,29 +4,24 @@ import hrestik from "../../assets/img/hrestik.svg";
 import login_profile from "../../assets/img/login_profile.svg";
 import login_lock from "../../assets/img/login_lock.svg";
 import alternate_email from "../../assets/img/alternate_email.svg";
-
-import axios from "axios";
+import {STATUS_CODES} from "../../assets/variables";
 import { useTranslation } from "react-i18next";
 import {logEvent} from "../../assets/analytics";
+import axiosInstance from "../../api/axiosInstance";
 
 function Registration({ registrRef, close, handleLogin }) {
+
+  const { t } = useTranslation();
+
   const [checked, setChecked] = useState(false);
-
-  const handleCheckboxChange = () => {
-    setChecked(!checked);
-  };
-
-  // --------------------------
-  // --------------------------
-  // --------------------------
-  // --------------------------
-  // --------------------------
-  // --------------------------
-
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
   const [email, setEmail] = useState("");
+
+  const handleCheckboxChange = () => {
+    setChecked(!checked);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,12 +29,12 @@ function Registration({ registrRef, close, handleLogin }) {
     if (password === password2) {
       const registrationData = { login, password, email };
       try {
-        const response = await axios.post(
+        const response = await axiosInstance.post(
           `${process.env.REACT_APP_SERVER_URL}/user/auth/registration`,
           registrationData
         );
 
-        if (response.status === 200) {
+        if (response.status === STATUS_CODES.SUCCESS) {
           console.log("Registration successful:", response.data);
           logEvent(
               "Button",
@@ -57,7 +52,7 @@ function Registration({ registrRef, close, handleLogin }) {
       alert("Passwords do not match");
     }
   };
-  const { t } = useTranslation();
+
   return (
     <div className="login_container">
       <form onSubmit={handleSubmit} className="login_content" ref={registrRef}>

@@ -1,14 +1,15 @@
 import React from "react";
-
 import arrRight from "../../assets/img/arrRight.svg";
 import arrowUpDown from "../../assets/img/arrowUpDown.svg";
 import infoSuccess from "../../assets/img/infoSuccess.svg";
-
 import { formatDistanceToNow } from "date-fns";
+
 function RecentLine({ img1, img2, blue, from, to, createdAt }) {
+
   const formattedTime = formatDistanceToNow(new Date(createdAt), {
     addSuffix: true,
   });
+
   return (
     <div className={`recent__block_line ${blue}`}>
       <div className="recent__block_line_side_container">

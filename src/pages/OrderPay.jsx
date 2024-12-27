@@ -1,51 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
-
 import time_line from "../assets/img/time_line.svg";
 import { QRCodeSVG } from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import {copyToClipboard} from "../assets/helpers";
+import $api from "../api";
 
-function Zayavka2() {
+function OrderPay() {
+
   const { t } = useTranslation();
   const { transactionId } = useParams();
+  const navigate = useNavigate();
+
   const [transactionData, setTransactionData] = useState(null);
   const [error, setError] = useState(true);
 
   const loginTxt = useSelector((state) => state.loginReducer.login);
-  const token =
-    localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setError(false);
-        setTransactionData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(true);
-      }
-    };
-
-    fetchData();
-  }, [transactionId, token, loginTxt]);
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await $api.get(`${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}`);
+      setError(false);
+      setTransactionData(response.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(true);
+    }
+  }, [transactionId]);
 
   const statusCancelled = async () => {
     try {
-      const response = await axios.put(
+      const response = await $api.put(
         `${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}/change-status`,
-        { status: 2 },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { status: 2 }
       );
       console.log("Status updated successfully:", response.data);
     } catch (error) {
@@ -55,12 +44,9 @@ function Zayavka2() {
 
   const statusPending = async () => {
     try {
-      const response = await axios.put(
+      const response = await $api.put(
         `${process.env.REACT_APP_SERVER_URL}/transaction/${transactionId}/change-status`,
-        { status: 1 },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { status: 1 }
       );
       console.log("Status updated successfully:", response.data);
     } catch (error) {
@@ -68,10 +54,8 @@ function Zayavka2() {
     }
   };
 
-  const navigate = useNavigate();
-
   const handleRedirect = () => {
-    navigate(loginTxt > 0 ? "/history" : `/zayavka/${transactionId}`);
+    navigate(loginTxt > 0 ? "/history" : `/order/${transactionId}`);
   };
 
   const paidFunc = async () => {
@@ -83,6 +67,15 @@ function Zayavka2() {
       console.error("Error in paidFunc:", error);
     }
   };
+
+  const handleCopyAddress = () => {
+    const addressText = transactionData.wallet;
+    copyToClipboard(addressText);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (!transactionData)
     return (
@@ -104,15 +97,10 @@ function Zayavka2() {
       </main>
     );
 
-  const handleCopyAddress = () => {
-    const addressText = transactionData.wallet;
-    navigator.clipboard.writeText(addressText);
-  };
-
   return (
     <main className="homeMain home_container container other_container">
-      <div className="zayavka__h1_container">
-        <h1 className="zayavka_h1">PAY ORDER #{transactionData.id}</h1>
+      <div className="order__h1_container">
+        <h1>PAY ORDER #{transactionData.id}</h1>
       </div>
       <div className="exchange_container order_exchange">
         <section className="quick__exchange_container quick__exchange_container_order">
@@ -208,4 +196,4 @@ function Zayavka2() {
   );
 }
 
-export default Zayavka2;
+export default OrderPay;
