@@ -16,7 +16,7 @@ $api.interceptors.request.use(
         }
 
         if (ref) {
-            config.headers["Referral"] = ref;
+            config.headers["X-Referral"] = ref;
         }
 
         return config;

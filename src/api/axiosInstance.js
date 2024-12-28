@@ -9,7 +9,7 @@ axiosInstance.interceptors.request.use(
         const ref = sessionStorage.getItem("ref");
 
         if (ref) {
-            config.headers["Referral"] = ref;
+            config.headers["X-Referral"] = ref;
         }
 
         return config;
